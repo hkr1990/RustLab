@@ -100,6 +100,11 @@ impl GameState {
         }
     }
 
+    pub fn print_score(&self) {
+        println!("Explosions left: {}", self.explosions_left);
+        println!("Little brother hits: {}", self.little_brother_hits);
+    }
+
     pub fn print_winner(&self) {
         if self.little_brother_hits == MAX_HITS {
             println!("You Won!");
@@ -125,6 +130,7 @@ fn main() {
         } else {
             println!("Brother was not hit!");
         }
+        game.print_score();
         let ten_millis = time::Duration::from_millis(1000);
         thread::sleep(ten_millis);
 
