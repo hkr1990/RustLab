@@ -37,6 +37,8 @@ struct GameState {
     little_brother_hits: u8,
     little_brother_location: Coord,
     sister_location: Coord,
+    brother_hit: bool,
+    sister_hit: bool,
 }
 
 impl GameState {
@@ -46,7 +48,9 @@ impl GameState {
             explosions_left: MAX_EXPLOSIONS, 
             little_brother_hits: 0, 
             little_brother_location: Coord::get_rand_coord(GRID_SIZE as u8, GRID_SIZE as u8), 
-            sister_location: Coord::get_rand_coord(GRID_SIZE as u8, GRID_SIZE as u8)
+            sister_location: Coord::get_rand_coord(GRID_SIZE as u8, GRID_SIZE as u8),
+            brother_hit: false,
+            sister_hit: false
         };
 
          // brother and sister can't be in the same spot
@@ -63,19 +67,26 @@ impl GameState {
     }
 
     pub fn fire_random_explosion(&mut self)-> bool {
+        // reset hit flags
+        self.brother_hit = false;
+        self.sister_hit = false;
+
         let explosion_location = Coord::get_rand_coord(GRID_SIZE as u8, GRID_SIZE as u8);
         let mut successful_hit = false;
         if explosion_location == self.little_brother_location {
             self.little_brother_hits += 1;
             successful_hit = true;
+            self.brother_hit = true;
         } else if explosion_location == self.sister_location {
             if self.explosions_left < 3 {
                 self.explosions_left = 0;
             } else {
                 self.explosions_left -= 3;
             }
+            self.sister_hit = true;
             println!("Sister got hit! Lose 3 explosions!");
         }
+        self.display_forest();
         self.explosions_left -= 1;
         return successful_hit;
     }
@@ -89,9 +100,17 @@ impl GameState {
             for x in 0..GRID_SIZE {
                 let coord = Coord::new(x, y);
                 if coord == self.little_brother_location {
-                    print!("\u{1F466}");
+                    if self.brother_hit {
+                        print!("\u{1F4A5}");
+                    } else {
+                        print!("\u{1F466}");
+                    }
                 } else if coord == self.sister_location {
-                    print!("\u{1F467}");
+                    if self.sister_hit {
+                        print!("\u{1F4A5}");
+                    } else {
+                        print!("\u{1F467}");
+                    }
                 } else {
                     print!("\u{1F332}");
                 }
@@ -122,7 +141,6 @@ fn main() {
     let mut game = GameState::new();
     while !game.is_game_over() {
         clearscreen::clear().expect("failed to clear screen");
-        game.display_forest();
         let successful_hit = game.fire_random_explosion();
         if successful_hit {
             println!("Brother got hit! Move him!");
